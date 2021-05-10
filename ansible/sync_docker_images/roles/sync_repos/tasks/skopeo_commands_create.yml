@@ -1,0 +1,35 @@
+---
+
+- name: create repo creation file
+  file:
+    path: /root/skopeo_commands.sh
+    state: touch
+    mode: '0755'
+    owner: 'root'
+    group: 'root'
+
+- name: file for failure list
+  file:
+    path: /root/failure.txt
+    state: touch
+    mode: '0755'
+    owner: 'root'
+    group: 'root'
+
+- name: Setup Commands for repo creation
+  template:
+    src: skopeo_commands.j2
+    dest: /root/skopeo_commands.sh
+    mode: '0755'
+    owner: 'root'
+    group: 'root'
+
+
+- name: Run copy commands
+  shell: "{{ item }}"
+  args:
+    executable: /bin/bash
+  with_lines: cat /root/skopeo_commands.sh
+
+
+- debug: msg="List of images which are not copied are - \n {{ lookup('file', '/root/failure.txt') }}"

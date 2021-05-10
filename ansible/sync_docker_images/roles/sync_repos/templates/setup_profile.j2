@@ -1,0 +1,38 @@
+[profile default]
+aws_access_key_id = {{ lookup('env','AWS_ACCESS_KEY_ID') }}
+aws_secret_access_key = {{ lookup('env','AWS_SECRET_ACCESS_KEY') }}
+output = json
+region = ap-southeast-2
+{% set aws_hosts = [] %}
+{% for profile_name in sync_images %}
+{% if "amazonaws.com" in sync_images[profile_name]['source'] and sync_images[profile_name]['source'] not in aws_hosts %}
+{{ aws_hosts.append( sync_images[profile_name]['source'] ) }}
+{% if sync_images[profile_name]['source_ecr_assume_role']  is defined %}
+[profile ecr_{{ sync_images[profile_name]['source'].split(".")[0] }}]
+role_arn = {{ sync_images[profile_name]['source_ecr_assume_role'] }}
+source_profile = default
+{% else %}
+[profile ecr_{{ sync_images[profile_name]['source'].split(".")[0] }}]
+aws_access_key_id = {{ lookup('env','AWS_ACCESS_KEY_ID') }}
+aws_secret_access_key = {{ lookup('env','AWS_SECRET_ACCESS_KEY') }}
+{% endif %}
+output = json
+region = {{ lookup('env','AWS_DEFAULT_REGION') }}
+{% endif %}
+{% for destination in sync_images[profile_name]['destinations'] %}
+{% if "amazonaws.com" in destination['host'] and destination['host'] not in aws_hosts %}
+{{ aws_hosts.append( destination['host'] ) }}
+{% if destination['ecr_assume_role'] is defined %}
+[profile ecr_{{ destination['host'].split(".")[0] }}]
+role_arn = {{  destination['ecr_assume_role'] }}
+source_profile = default
+{% else %}
+[profile ecr_{{ destination['host'].split(".")[0] }}]
+aws_access_key_id = {{ lookup('env','AWS_ACCESS_KEY_ID') }}
+aws_secret_access_key = {{ lookup('env','AWS_SECRET_ACCESS_KEY') }}
+{% endif %}
+output = json
+region = {{ lookup('env','AWS_DEFAULT_REGION') }}
+{% endif %}
+{% endfor %}
+{% endfor %}

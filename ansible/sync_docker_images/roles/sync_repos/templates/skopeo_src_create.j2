@@ -1,0 +1,29 @@
+  #!/bin/bash
+{% set repo_names = [] %}
+{% for profile_name in sync_images %}
+{% set source =  sync_images[profile_name]['source'] %}
+{% for destination in sync_images[profile_name]['destinations'] %}
+{% for image in sync_images[profile_name]['images'] %}
+{% set my_string = "docker://" ~ destination['host'] ~ "/" ~ image %}
+{% if "amazonaws.com" in destination['host'] and my_string not in repo_names %}
+{{ repo_names.append( "docker://" ~ destination['host'] ~ "/" ~ image ) }}
+aws ecr describe-repositories --repository-name {{ image }} --profile ecr_{{ destination['host'].split(".")[0] }} > /dev/null 2>&1
+if [ $(echo $?) != 0 ]; then
+    aws ecr create-repository --repository-name {{ image }} --profile ecr_{{ destination['host'].split(".")[0] }}
+fi
+{% endif %}
+{% endfor %}
+{% if sync_images[profile_name]['images-by-tag-regex'] is defined %}
+{% for regex_image in sync_images[profile_name]['images-by-tag-regex'] %}
+{% set reg_img_string = "docker://" ~ destination['host'] ~ "/" ~ regex_image %}
+{% if "amazonaws.com" in destination['host'] and reg_img_string not in repo_names %}
+{{ repo_names.append( "docker://" ~ destination['host'] ~ "/" ~ regex_image ) }}
+aws ecr describe-repositories --repository-name {{ regex_image }} --profile ecr_{{ destination['host'].split(".")[0] }} > /dev/null 2>&1
+if [ $(echo $?) != 0 ]; then
+    aws ecr create-repository --repository-name {{ regex_image }} --profile ecr_{{ destination['host'].split(".")[0] }}
+fi
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endfor %}

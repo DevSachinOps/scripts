@@ -1,0 +1,15 @@
+---
+
+- debug: msg="{{ sync_images }}"
+
+- name: Setup Cloud Profiles
+  import_tasks: cloud_profile.yml
+
+- name: Skopeo Login
+  import_tasks: skopeo_login.yml
+
+- name: Create target repository which doesn't exists
+  import_tasks: skopeo_src_create.yml
+
+- name: Skopeo commands create
+  import_tasks: skopeo_commands_create.yml

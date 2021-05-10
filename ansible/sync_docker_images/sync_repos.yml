@@ -1,0 +1,6 @@
+---
+- name: Sync Docker Repositories
+  hosts: 127.0.0.1
+  gather_facts: no
+  roles:
+    - { role: sync_repos }

@@ -1,0 +1,29 @@
+---
+# Get source and destination vars from the dictionary keys and login
+
+- name: create .aws directory
+  file:
+    path: /root/.aws
+    state: directory
+    mode: '0755'
+    owner: 'root'
+    group: 'root'
+
+- name: create config file
+  file:
+    path: /root/.aws/config
+    state: touch
+    mode: '0755'
+    owner: 'root'
+    group: 'root'
+
+- name: Setup AWS Profiles
+  template:
+    src: setup_profile.j2
+    dest: ~/.aws/config
+    mode: '0755'
+    owner: 'root'
+    group: 'root'
+
+- name: setup account for gcr
+  shell: gcloud auth activate-service-account $(cat /data/gcr_creds.json | jq .client_email -r) --key-file=/data/gcr_creds.json

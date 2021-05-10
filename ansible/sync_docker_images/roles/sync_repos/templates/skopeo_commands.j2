@@ -1,0 +1,22 @@
+echo "" > /root/failure.txt
+{% set repo_names = [] %}
+{% for profile_name in sync_images %}
+{% set source =  sync_images[profile_name]['source'] %}
+{% for destination in sync_images[profile_name]['destinations'] %}
+{% for image in sync_images[profile_name]['images'] %}
+{% set source_url = "docker://" ~ source ~ "/" ~ image %}
+{% set dest_url = "docker://" ~ destination['host'] ~ "/" ~ image %}
+{% for tag in sync_images[profile_name]['images'][image] %}
+skopeo inspect {{ source_url }} | jq .RepoTags[]  --raw-output | while read line; do if [[ $line == {{ tag }} ]]; then echo "skopeo copy {{ source_url }}:$line {{ dest_url }}:$line"; skopeo copy {{ source_url }}:$line {{ dest_url }}:$line; if [[ "{{ source_url }}" != *"docker.io"* ]]; then if [[ $(skopeo inspect  {{ source_url }}:$line  | jq '.Digest') !=  $(skopeo inspect {{ dest_url }}:$line | jq '.Digest') ]]; then echo "skopeo copy {{ source_url }}:$line {{ dest_url }}:$line" >> /root/failure.txt; skopeo delete {{ dest_url }}:$line; fi fi fi done
+{% endfor %}
+{% endfor %}
+{% if sync_images[profile_name]['images-by-tag-regex'] is defined %}
+{% for regex_image in sync_images[profile_name]['images-by-tag-regex'] %}
+{% set dest_url = "docker://" ~ destination['host'] ~ "/" ~ regex_image %}
+{% set source_url = "docker://" ~ source ~ "/" ~ regex_image %}
+{% set tag = sync_images[profile_name]['images-by-tag-regex'][regex_image] %}
+skopeo inspect {{ source_url }} | jq .RepoTags[]  --raw-output | while read line; do if [[ $line =~ {{ tag }} ]]; then echo "skopeo copy {{ source_url }}:$line {{ dest_url }}:$line"; skopeo copy {{ source_url }}:$line {{ dest_url }}:$line; if [[ "{{ source_url }}" != *"docker.io"* ]]; then if [[ $(skopeo inspect  {{ source_url }}:$line  | jq '.Digest') !=  $(skopeo inspect {{ dest_url }}:$line | jq '.Digest') ]]; then echo "skopeo copy {{ source_url }}:$line {{ dest_url }}:$line" >> /root/failure.txt; skopeo delete {{ dest_url }}:$line; fi fi fi done
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endfor %}

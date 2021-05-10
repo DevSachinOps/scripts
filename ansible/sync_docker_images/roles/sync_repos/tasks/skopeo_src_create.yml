@@ -1,0 +1,20 @@
+---
+
+- name: create repo creation file
+  file:
+    path: /root/src_repo_commands.sh
+    state: touch
+    mode: '0755'
+    owner: 'root'
+    group: 'root'
+
+- name: Setup Commands for repo creation
+  template:
+    src: skopeo_src_create.j2
+    dest: /root/src_repo_commands.sh
+    mode: '0755'
+    owner: 'root'
+    group: 'root'
+
+- name: Run repo creation commands
+  command: bash /root/src_repo_commands.sh

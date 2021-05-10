@@ -1,0 +1,52 @@
+---
+sync_images:
+
+  TASK_1:
+    source: docker.io #Source
+    destinations: # Destinations can be multiple as well
+      - host: ACCOUNT_ID.dkr.ecr.ap-southeast-2.amazonaws.com
+        create_ecr_repo: true
+    images:
+      busybox:
+          - latest
+      nginx:
+          - latest
+      rancher/k3s: # this will be pushed as <AWS_Account_Number>.dkr.ecr.ap-southeast-2.amazonaws.com/rancher/k3s
+          - latest
+    images-by-tag-regex:
+      rancher/k3s: v1.18.4-.*
+      busybox: 1.32[-\.].*
+      nginx: 1.18\..*
+
+  TAST_2:
+    source: ACCOUNT_ID_1.dkr.ecr.ap-southeast-2.amazonaws.com
+    destinations:
+      - host: ACCOUNT_ID_2.dkr.ecr.ap-southeast-2.amazonaws.com
+        create_ecr_repo: true
+        ecr_assume_role: "arn:aws:iam::ACCOUNT_ID_2:role/ecr-role-for-copy-images"
+    create_ecr_repo: True
+    images:
+      busybox:
+        - latest
+      nginx:
+        - latest
+      rancher/k3s: # this should be pushed as <AWS_Account_Number>.dkr.ecr.ap-southeast-2.amazonaws.com/rancher/k3s
+        - latest
+    images-by-tag-regex:
+      busybox: 1.32[-\.].*
+      nginx: 1.18.*
+
+
+  gcr_tools:
+    source: ACCOUNT_ID_2.dkr.ecr.ap-southeast-2.amazonaws.com
+    source_ecr_assume_role: "arn:aws:iam::ACCOUNT_ID_2:role/ecr-admin"
+    destinations:
+      - host: asia.gcr.io/gcr_repo_name
+        gcr_creds_json: gcr_creds.json # This is to login into GCP account
+    images:
+        busybox:
+          - latest
+        rancher/k3s:
+          - latest
+    images-by-tag-regex:
+      nginx: 1.18.*

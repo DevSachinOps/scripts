@@ -1,0 +1,30 @@
+#!/bin/bash
+{% set aws_hosts = [] %}
+{% for profile_name in sync_images %}
+{% if "amazonaws.com" in sync_images[profile_name]['source'] and sync_images[profile_name]['source'] not in aws_hosts %}
+{{ aws_hosts.append( sync_images[profile_name]['source'] ) }}
+skopeo login -u AWS -p $(aws ecr get-login-password --profile ecr_{{ sync_images[profile_name]['source'].split(".")[0] }} ) {{ sync_images[profile_name]['source'] }}
+{% endif %}
+{% if "gcr.io" in sync_images[profile_name]['source'] and sync_images[profile_name]['source'] not in aws_hosts %}
+{{ aws_hosts.append( sync_images[profile_name]['source'] ) }}
+skopeo login -u oauth2accesstoken -p $(gcloud auth print-access-token) {{ sync_images[profile_name]['source'] }}
+{% endif %}
+{% if "docker.io" in sync_images[profile_name]['source'] and sync_images[profile_name]['source'] not in aws_hosts %}
+{{ aws_hosts.append( sync_images[profile_name]['source'] ) }}
+skopeo login -u {{ lookup('env','DOCKERHUB_USER') }} -p {{ lookup('env','DOCKERHUB_PASS') }} {{ sync_images[profile_name]['source'] }}
+{% endif %}
+{% for destination in sync_images[profile_name]['destinations'] %}
+{% if "amazonaws.com" in destination['host'] and destination['host'] not in aws_hosts %}
+{{ aws_hosts.append( destination['host'] ) }}
+skopeo login -u AWS -p $(aws ecr get-login-password --profile ecr_{{ destination['host'].split(".")[0] }} ) {{ destination['host'] }}
+{% endif %}
+{% if "gcr.io" in destination['host'] and destination['host'] not in aws_hosts %}
+{{ aws_hosts.append(  destination['host'] ) }}
+skopeo login -u oauth2accesstoken -p $(gcloud auth print-access-token) {{  destination['host'] }}
+{% endif %}
+{% if "docker.io" in destination['host'] and destination['host'] not in aws_hosts %}
+{{ aws_hosts.append(  destination['host'] ) }}
+skopeo login -u {{ lookup('env','DOCKERHUB_USER') }} -p {{ lookup('env','DOCKERHUB_PASS') }} {{ destination['host'] }}
+{% endif %}
+{% endfor %}
+{% endfor %}

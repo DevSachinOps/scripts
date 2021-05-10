@@ -1,0 +1,20 @@
+---
+
+- name: Create login commands file
+  file:
+    path: /root/skopeo_login_commands.sh
+    state: touch
+    mode: '0755'
+    owner: 'root'
+    group: 'root'
+
+- name: Setup commands for Skopeo Login
+  template:
+    src: skopeo_login.j2
+    dest: /root/skopeo_login_commands.sh
+    mode: '0755'
+    owner: 'root'
+    group: 'root'
+
+- name: Run Login Commands
+  command: bash /root/skopeo_login_commands.sh
