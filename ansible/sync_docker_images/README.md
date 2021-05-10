@@ -17,7 +17,7 @@
     * AWS_SECRET_ACCESS_KEY
     * AWS_DEFAULT_REGION
 * gcr_creds.json should be in the same dir, from where you are running the playbook.
-* Update `.roles/vars/main.yml` as per your requirements.
+* Update `.roles/sync_registries/vars/main.yml` as per your requirements.
 
 ## Run the skopeo commands with environment variables and mount folders as volumes
 * This command will run the ansible playbook.
